@@ -3,7 +3,7 @@ import { useAlgoContext } from "../../hooks/useAlgoContext";
 const AlgoTheme = () => {
   const context = useAlgoContext();
   return (
-    <div className="absolute top-5 right-5">
+    <div className="">
       <button
         onClick={context?.toggle}
         className={
