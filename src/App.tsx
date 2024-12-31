@@ -1,5 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import AlgoTheme from "./components/algoTheme";
+import BubbleSortChallenge from "./components/code";
 import { useAlgoContext } from "./hooks/useAlgoContext";
 import {
   generateRandomArray,
@@ -23,7 +24,7 @@ function App() {
   const [activeIndices, setActiveIndices] = useState<[number, number] | null>(
     null
   );
-
+  const [showCodeEditor, setShowEditor] = useState(false);
   const generateArray = () => {
     setSortStates((prev) => {
       return { ...prev, isArraySorted: false };
@@ -91,10 +92,8 @@ function App() {
     handleSort(sortStates.sortType as SortAlgoType);
   }, [sortStates.isSorting]);
 
-  console.log("is sorting", sortStates);
-
   const displayArrayGraph = () => (
-    <ul className="z-[5000] w-[90%] text-center overflow-hidden flex items-start justify-center">
+    <ul className="z-[60] w-[90%] text-center overflow-hidden flex items-start justify-center">
       {array?.map((arr, index) => {
         return (
           <li
@@ -128,9 +127,15 @@ function App() {
           : " bg-gray-300 text-gray-900"
       }`}
     >
+      <BubbleSortChallenge
+        showCodeEditor={showCodeEditor}
+        setShowEditor={setShowEditor}
+      />
+
       {sortStates.isSorting && (
-        <div className="fixed top-0 left-0 bg-gray-900 h-screen w-screen z-[50] opacity-20" />
+        <div className="fixed top-0 left-0 bg-gray-900 h-screen w-screen z-[50] opacity-60 cursor-not-allowed" />
       )}
+
       <div className="flex flex-col lg:flex-row items-center justify-around md:justify-between h-[25vh] md:h-[12vh] px-10">
         <button onClick={generateArray}>Generate array</button>
         <div className="flex items-center justify-center gap-5">
@@ -148,7 +153,10 @@ function App() {
             </button>
           ))}
         </div>
-        <AlgoTheme />
+        <div className="flex items-center gap-5">
+          <button onClick={() => setShowEditor(true)}>Practice</button>
+          <AlgoTheme />
+        </div>
       </div>
       {sortStates.sortType && (
         <div className="text-center">

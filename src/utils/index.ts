@@ -19,11 +19,11 @@ export const options: Option[] = [
 ];
 
 export const speedOptions = [
-  { value: 4000, label: "Speed" },
-  { value: 3500, label: "1x" },
-  { value: 2500, label: "2x" },
-  { value: 1500, label: "3x" },
-  { value: 1000, label: "4x" },
+  { value: 3000, label: "Speed" },
+  { value: 2500, label: "1x" },
+  { value: 1500, label: "2x" },
+  { value: 1000, label: "3x" },
+  { value: 700, label: "4x" },
   { value: 500, label: "5x" },
   { value: 200, label: "6x" },
   { value: 50, label: "7x" },
@@ -34,7 +34,7 @@ export function styleArrayElement<T>(array: T[]) {
   if (array.length < 10) return "w-20 ml-2";
   else if (array.length >= 10 && array.length < 20) return "w-14 text-xs ml-2";
   else if (array.length >= 20 && array.length < 40)
-    return "w-5 text-[8px] ml-1";
+    return "w-5 text-[5px] ml-1";
   else if (array.length >= 40 && array.length < 80)
     return "w-2 text-[3px] ml-1";
   else if (array.length >= 80) return "w-1 text-[2px] ml-1";
