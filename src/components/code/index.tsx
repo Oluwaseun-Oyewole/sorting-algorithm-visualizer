@@ -44,7 +44,7 @@ const BubbleSortChallenge = ({
     const outputs: string[] = [];
     try {
       // eslint-disable-next-line no-new-func
-      const userFunction = new Function(`${userCode}; return bubbleSort;`)();
+      const userFunction = new Function(`${userCode}; return Sort;`)();
       for (const testCase of testCases) {
         const userOutput = userFunction([...testCase.input]);
         const expectedOutput = bubbleSort([...testCase.input]);
@@ -108,15 +108,9 @@ const BubbleSortChallenge = ({
           <button
             onClick={runUserCode}
             disabled={running}
-            // className="bg-green-600 text-sm border-none px-5 py-3 my-3 hover:opacity:90 transition-all ease-in-out duration-300"
-            style={{
-              margin: "10px 0",
-              padding: "10px 20px",
-              backgroundColor: running ? "gray" : "#4CAF50",
-              color: "white",
-              border: "none",
-              cursor: running ? "not-allowed" : "pointer",
-            }}
+            className={`bg-green-600 text-sm border-none px-7 rounded-md py-3 my-3 hover:opacity:90 transition-all ease-in-out duration-300 ${
+              running ? "cursor-not-allowed" : "cursor-pointer"
+            }`}
           >
             {running ? "Running..." : "Run Test Cases"}
           </button>

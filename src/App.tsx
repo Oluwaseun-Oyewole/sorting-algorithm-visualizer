@@ -1,4 +1,11 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import Audio from "./assets/tick.mp3";
 import AlgoTheme from "./components/algoTheme";
 import BubbleSortChallenge from "./components/code";
 import { useAlgoContext } from "./hooks/useAlgoContext";
@@ -25,6 +32,7 @@ function App() {
     null
   );
   const [showCodeEditor, setShowEditor] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const generateArray = () => {
     setSortStates((prev) => {
       return { ...prev, isArraySorted: false };
@@ -47,8 +55,23 @@ function App() {
       return { ...prev, sortType };
     });
   };
+  const stopSound = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0; // Reset to the beginning
+    }
+  };
+  const playSound = () => {
+    if (audioRef?.current) {
+      audioRef.current.play();
+    }
+  };
 
   async function BubbleSort<T extends number>(arr: T[], speed: T) {
+    playSound();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+    audioRef.current.loop = true;
     try {
       for (let index = 0; index < arr.length; index++) {
         for (let j = 0; j < arr.length - 1 - index; j++) {
@@ -68,6 +91,7 @@ function App() {
       setSortStates((prev) => {
         return { ...prev, isArraySorted: true, isSorting: false };
       });
+      stopSound();
     }
   }
 
@@ -90,6 +114,9 @@ function App() {
 
   useEffect(() => {
     handleSort(sortStates.sortType as SortAlgoType);
+    if (sortStates.isSorting) {
+      playSound();
+    }
   }, [sortStates.isSorting]);
 
   const displayArrayGraph = () => (
@@ -119,6 +146,14 @@ function App() {
     </ul>
   );
 
+  useLayoutEffect(() => {
+    if (context?.algoTheme === "light")
+      document.body.style.backgroundColor = "#d1d5db";
+    else {
+      document.body.style.backgroundColor = "#111827";
+    }
+  }, [context?.algoTheme]);
+
   return (
     <main
       className={`relative w-screen min-h-screen  ${
@@ -127,6 +162,8 @@ function App() {
           : " bg-gray-300 text-gray-900"
       }`}
     >
+      <audio ref={audioRef} src={Audio} />
+
       <BubbleSortChallenge
         showCodeEditor={showCodeEditor}
         setShowEditor={setShowEditor}
@@ -136,21 +173,38 @@ function App() {
         <div className="fixed top-0 left-0 bg-gray-900 h-screen w-screen z-[50] opacity-60 cursor-not-allowed" />
       )}
 
-      <div className="flex flex-col lg:flex-row items-center justify-around md:justify-between h-[25vh] md:h-[12vh] px-10">
+      <div
+        className={`lg:h-[15vh] sticky top-0 left-0 z-[100] flex flex-col lg:flex-row items-center justify-around md:justify-between px-10 py-5 lg:py-10 ${
+          context?.algoTheme === "dark" ? "bg-gray-900" : "bg-gray-300"
+        }`}
+      >
         <button onClick={generateArray}>Generate array</button>
-        <div className="flex items-center justify-center gap-5">
+        <div className="flex items-center justify-center gap-5 py-4 lg:py-0">
           {options.map((option) => (
-            <button
-              disabled={option?.disabled}
-              key={option.value}
-              value={option.value}
-              className={`${
-                option.value === sortStates?.sortType && "text-green-600"
-              } disabled:cursor-not-allowed`}
-              onClick={() => handleSortStates(option.value as SortAlgoType)}
-            >
-              {option.label}
-            </button>
+            <div>
+              <button
+                disabled={option?.disabled}
+                key={option.value}
+                value={option.value}
+                className={`${
+                  option.value === sortStates?.sortType && "text-green-600"
+                } disabled:cursor-not-allowed hidden md:block`}
+                onClick={() => handleSortStates(option.value as SortAlgoType)}
+              >
+                {option.label}
+              </button>
+              <button
+                disabled={option?.disabled}
+                key={option.value}
+                value={option.value}
+                className={`${
+                  option.value === sortStates?.sortType && "text-green-600"
+                } disabled:cursor-not-allowed block md:hidden`}
+                onClick={() => handleSortStates(option.value as SortAlgoType)}
+              >
+                {option.label?.split(" ")[0]}
+              </button>
+            </div>
           ))}
         </div>
         <div className="flex items-center gap-5">
@@ -159,7 +213,7 @@ function App() {
         </div>
       </div>
 
-      <div className="text-center pb-4 md:py-4 lg:py-0 lg:pb-8">
+      <div className="text-center py-5">
         {sortStates.sortType && (
           <button
             onClick={handleSorting}
@@ -170,11 +224,11 @@ function App() {
         )}
       </div>
 
-      <div className="lg:h-[75vh] flex items-center justify-center">
+      <div className="flex items-center justify-center md:h-[65vh] overflow-y-scroll">
         {displayArrayGraph()}
       </div>
 
-      <div className="py-6 lg:py-0 gap-5 relative text-center flex items-center justify-center">
+      <div className="py-5 md:py-6 lg:py-0 gap-8 lg:absolute bottom-4 w-full text-center flex items-center justify-center">
         <input
           type="range"
           name="range"
@@ -184,22 +238,27 @@ function App() {
           onChange={onChangeHandler}
         />
 
-        <div className="lg:absolute top-16 right-0 lg:top-0 lg:right-10">
-          <select
-            id="select"
-            value={sortStates.sortType}
-            onChange={handleSpeedChange}
-            className={`border-2 border-gray-600 rounded py-2 w-[130px] ${
-              context?.algoTheme === "dark" ? "bg-gray-900" : "bg-gray-300"
-            }`}
-          >
-            {speedOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          id="select"
+          value={sortStates.sortType}
+          onChange={handleSpeedChange}
+          className={`border-2 border-gray-600 rounded py-2 w-[130px] ${
+            context?.algoTheme === "dark" ? "bg-gray-900" : "bg-gray-300"
+          }`}
+        >
+          {speedOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <button onClick={stopSound} className="hidden md:block z-[10000]">
+          Stop sound
+        </button>
+      </div>
+
+      <div className="py-2 lg:py-0 w-full text-center flex md:hidden items-center justify-center z-[10000]">
+        <button onClick={stopSound}>Stop sound</button>
       </div>
     </main>
   );
