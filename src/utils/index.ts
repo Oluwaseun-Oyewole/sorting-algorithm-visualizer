@@ -8,20 +8,21 @@ export const generateRandomArray = (size?: number) => {
 interface Option {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 export const options: Option[] = [
-  { value: "Merge", label: "Merge Sort" },
-  { value: "Quick", label: "Quick Sort" },
-  { value: "Heap", label: "Heap Sort" },
+  { value: "Merge", label: "Merge Sort", disabled: true },
+  { value: "Quick", label: "Quick Sort", disabled: true },
+  { value: "Heap", label: "Heap Sort", disabled: true },
   { value: "Bubble", label: "Bubble Sort" },
-  { value: "Insertion", label: "Insertion Sort" },
+  { value: "Insertion", label: "Insertion Sort", disabled: true },
 ];
 
 export const speedOptions = [
-  { value: "", label: "Speed" },
-  { value: 50, label: "1x" },
-  { value: 40, label: "2x" },
-  { value: 30, label: "3x" },
-  { value: 10, label: "4x" },
-  { value: 5, label: "5x" },
+  { value: 4000, label: "Speed" },
+  { value: 3500, label: "1x" },
+  { value: 2500, label: "2x" },
+  { value: 1500, label: "3x" },
+  { value: 1000, label: "4x" },
+  { value: 500, label: "5x" },
 ];
