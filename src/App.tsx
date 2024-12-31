@@ -1,11 +1,15 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import AlgoTheme from "./components/algoTheme";
 import { useAlgoContext } from "./hooks/useAlgoContext";
-import { generateRandomArray, options, speedOptions } from "./utils";
+import {
+  generateRandomArray,
+  options,
+  speedOptions,
+  styleArrayElement,
+} from "./utils";
 
 type SortAlgoType = "Merge" | "Bubble" | "Quick" | "Heap" | "Insertion";
 function App() {
-  const colors = ["red", "bg-green-700", "blue", "yellow", "purple"];
   const context = useAlgoContext();
   const [array, setArray] = useState(generateRandomArray() ?? []);
   const [range, setRange] = useState(array?.length);
@@ -15,6 +19,10 @@ function App() {
     isSorting?: boolean;
     isArraySorted?: boolean;
   }>({ speed: speedOptions[0]?.value });
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndices, setActiveIndices] = useState<[number, number] | null>(
+    null
+  );
 
   const generateArray = () => {
     setSortStates((prev) => {
@@ -39,28 +47,27 @@ function App() {
     });
   };
 
-  function BubbleSort<T extends number>(arr: T[], speed: T) {
-    const step = async () => {
-      try {
-        for (let index = 0; index < arr.length; index++) {
-          for (let j = 0; j < arr.length - 1 - index; j++) {
-            if (arr[j] > arr[j + 1]) {
-              [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
-              setArray([...arr]);
-              // Delay for specified period
-              await new Promise((resolve) => setTimeout(resolve, speed));
-            }
+  async function BubbleSort<T extends number>(arr: T[], speed: T) {
+    try {
+      for (let index = 0; index < arr.length; index++) {
+        for (let j = 0; j < arr.length - 1 - index; j++) {
+          setActiveIndex(index);
+          setActiveIndices([j, j + 1]);
+          if (arr[j] > arr[j + 1]) {
+            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+            setArray([...arr]);
+            // Delay for specified period
+            await new Promise((resolve) => setTimeout(resolve, speed));
           }
         }
-      } catch (error) {
-        return error;
-      } finally {
-        setSortStates((prev) => {
-          return { ...prev, isArraySorted: true, isSorting: false };
-        });
       }
-    };
-    step();
+    } catch (error) {
+      return error;
+    } finally {
+      setSortStates((prev) => {
+        return { ...prev, isArraySorted: true, isSorting: false };
+      });
+    }
   }
 
   function handleSort(sort: SortAlgoType) {
@@ -85,30 +92,24 @@ function App() {
   }, [sortStates.isSorting]);
 
   console.log("is sorting", sortStates);
-  // styling
-  function styleArrayElement<T>(array: T[]) {
-    if (array.length < 10) return "w-20 ml-2";
-    else if (array.length >= 10 && array.length < 20)
-      return "w-14 text-xs ml-2";
-    else if (array.length >= 20 && array.length < 40)
-      return "w-5 text-[8px] ml-1";
-    else if (array.length >= 40 && array.length < 80)
-      return "w-2 text-[3px] ml-1";
-    else if (array.length >= 80) return "w-1 text-[2px] ml-1";
-    else return;
-  }
 
   const displayArrayGraph = () => (
-    <ul className="w-[90%] text-center overflow-hidden flex items-start justify-center">
+    <ul className="z-[5000] w-[90%] text-center overflow-hidden flex items-start justify-center">
       {array?.map((arr, index) => {
         return (
           <li
             key={index}
             className={`flex items-center justify-center text-white font-medium rounded-sm shadow-xl hover:scale-105 transition-all duration-500 ease-in-out ${styleArrayElement(
               array
-            )} ${sortStates.isArraySorted ? `${colors[1]}` : "bg-gray-500"}`}
+            )} ${sortStates.isArraySorted ? "bg-green-800" : "bg-gray-500"} ${
+              activeIndex === index && sortStates.isSorting && "bg-blue-800"
+            }`}
             style={{
               height: `${arr + 50}px`,
+              backgroundColor:
+                activeIndices?.includes(index) && sortStates.isSorting
+                  ? "#991b1b"
+                  : "",
             }}
           >
             {index}
