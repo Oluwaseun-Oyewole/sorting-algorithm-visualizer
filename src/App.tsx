@@ -174,7 +174,7 @@ function App() {
       )}
 
       <div
-        className={`lg:h-[15vh] sticky top-0 left-0 z-[100] flex flex-col lg:flex-row items-center justify-around md:justify-between px-10 py-5 lg:py-10 ${
+        className={`lg:h-[10vh] sticky top-0 left-0 z-[100] flex flex-col lg:flex-row items-center justify-around md:justify-between px-10 py-5 ${
           context?.algoTheme === "dark" ? "bg-gray-900" : "bg-gray-300"
         }`}
       >
@@ -257,8 +257,10 @@ function App() {
         </button>
       </div>
 
-      <div className="py-2 lg:py-0 w-full text-center flex md:hidden items-center justify-center z-[10000]">
-        <button onClick={stopSound}>Stop sound</button>
+      <div className="py-2 lg:py-0 w-full text-center flex md:hidden items-center justify-center">
+        <button onClick={stopSound} className="block md:hidden z-[10000]">
+          Stop sound
+        </button>
       </div>
     </main>
   );
