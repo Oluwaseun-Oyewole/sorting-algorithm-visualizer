@@ -120,7 +120,7 @@ function App() {
   }, [sortStates.isSorting]);
 
   const displayArrayGraph = () => (
-    <ul className="z-[60] w-[90%] text-center overflow-hidden flex items-start justify-center">
+    <ul className="z-[60] w-[90%] text-center overflow-hidden flex items-start justify-center relative z-[150]">
       {array?.map((arr, index) => {
         return (
           <li
@@ -170,11 +170,11 @@ function App() {
       />
 
       {sortStates.isSorting && (
-        <div className="fixed top-0 left-0 bg-gray-900 h-screen w-screen z-[50] opacity-60 cursor-not-allowed" />
+        <div className="fixed top-0 left-0 bg-gray-900 h-screen w-screen z-[120] opacity-60 cursor-not-allowed" />
       )}
 
       <div
-        className={`lg:h-[10vh] sticky top-0 left-0 z-[100] flex flex-col lg:flex-row items-center justify-around md:justify-between px-10 py-5 ${
+        className={`lg:h-[12vh] sticky top-0 left-0 z-[100] flex flex-col lg:flex-row items-center justify-around md:justify-between px-10 py-5 ${
           context?.algoTheme === "dark" ? "bg-gray-900" : "bg-gray-300"
         }`}
       >
@@ -252,13 +252,13 @@ function App() {
             </option>
           ))}
         </select>
-        <button onClick={stopSound} className="hidden md:block z-[10000]">
+        <button onClick={stopSound} className="hidden md:block z-[150]">
           Stop sound
         </button>
       </div>
 
       <div className="py-2 lg:py-0 w-full text-center flex md:hidden items-center justify-center">
-        <button onClick={stopSound} className="block md:hidden z-[10000]">
+        <button onClick={stopSound} className="block md:hidden z-[150]">
           Stop sound
         </button>
       </div>

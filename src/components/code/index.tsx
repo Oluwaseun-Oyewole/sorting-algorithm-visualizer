@@ -84,7 +84,7 @@ const BubbleSortChallenge = ({
   return (
     <div>
       <div
-        className={`fixed top-0 left-0 bg-gray-800 h-screen w-screen z-[70] opacity-70 transition-all ease-out duration-500 ${
+        className={`fixed top-0 left-0 bg-gray-800 h-screen w-screen z-[400] opacity-70 transition-all ease-out duration-500 ${
           showCodeEditor ? "translate-x-0" : "-translate-x-full"
         }`}
         ref={ref}
