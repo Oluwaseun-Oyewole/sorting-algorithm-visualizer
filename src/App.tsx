@@ -121,7 +121,7 @@ function App() {
 
   return (
     <main
-      className={`relative w-screen h-screen ${
+      className={`relative w-screen min-h-screen  ${
         context?.algoTheme === "dark"
           ? " bg-gray-900 text-white"
           : " bg-gray-300 text-gray-900"
@@ -158,20 +158,23 @@ function App() {
           <AlgoTheme />
         </div>
       </div>
-      {sortStates.sortType && (
-        <div className="text-center">
+
+      <div className="text-center py-4">
+        {sortStates.sortType && (
           <button
             onClick={handleSorting}
             className={`bg-green-700 text-white px-5 py-2 rounded-md text-sm hover:opacity-80 transition ease-in-out duration-500`}
           >
             Sort
           </button>
-        </div>
-      )}
-      <div className="h-[70vh] md:h-[75vh] flex items-center justify-center">
+        )}
+      </div>
+
+      <div className="lg:h-[75vh] flex items-center justify-center">
         {displayArrayGraph()}
       </div>
-      <div className="relative text-center flex items-center justify-center">
+
+      <div className="py-6 lg:py-0 gap-5 relative text-center flex items-center justify-center">
         <input
           type="range"
           name="range"
@@ -181,7 +184,7 @@ function App() {
           onChange={onChangeHandler}
         />
 
-        <div className="absolute top-16 right-0 md:top-0 md:right-10">
+        <div className="lg:absolute top-16 right-0 lg:top-0 lg:right-10">
           <select
             id="select"
             value={sortStates.sortType}

@@ -9,7 +9,7 @@ const BubbleSortChallenge = ({
   showCodeEditor: boolean;
   setShowEditor: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const [userCode, setUserCode] = useState<string>(`function bubbleSort(arr) {
+  const [userCode, setUserCode] = useState<string>(`function Sort(arr) {
    // Practice sorting algorithms
    return arr
 }`);
@@ -26,7 +26,7 @@ const BubbleSortChallenge = ({
   ];
 
   // Your algorithm for comparison
-  const myBubbleSort = (arr: number[]): number[] => {
+  const bubbleSort = (arr: number[]): number[] => {
     const result = [...arr];
     for (let i = 0; i < result.length; i++) {
       for (let j = 0; j < result.length - 1 - i; j++) {
@@ -47,7 +47,7 @@ const BubbleSortChallenge = ({
       const userFunction = new Function(`${userCode}; return bubbleSort;`)();
       for (const testCase of testCases) {
         const userOutput = userFunction([...testCase.input]);
-        const expectedOutput = myBubbleSort([...testCase.input]);
+        const expectedOutput = bubbleSort([...testCase.input]);
 
         if (JSON.stringify(userOutput) === JSON.stringify(expectedOutput)) {
           outputs.push(`✅ Passed for input: [${testCase.input.join(", ")}]`);
@@ -81,8 +81,6 @@ const BubbleSortChallenge = ({
     };
   }, [showCodeEditor]);
 
-  console.log("show editorrrr", showCodeEditor);
-
   return (
     <div>
       <div
@@ -92,7 +90,7 @@ const BubbleSortChallenge = ({
         ref={ref}
       />
       <div
-        className={`absolute top-0 left-0 bg-gray-700 w-[35%] h-full transition-all ease-in-out duration-500 z-[500] ${
+        className={`text-white absolute top-0 left-0 bg-gray-700 md:w-[35%] h-full transition-all ease-in-out duration-500 z-[500] ${
           showCodeEditor ? "translate-x-0" : "-translate-x-full"
         }`}
       >
