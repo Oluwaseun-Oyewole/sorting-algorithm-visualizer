@@ -90,7 +90,7 @@ const BubbleSortChallenge = ({
         ref={ref}
       />
       <div
-        className={`text-white absolute top-0 left-0 bg-gray-700 md:w-[35%] h-full transition-all ease-in-out duration-500 z-[500] ${
+        className={`text-white absolute top-0 left-0 bg-gray-700 w-[90%] md:w-[35%] h-full transition-all ease-in-out duration-500 z-[500] ${
           showCodeEditor ? "translate-x-0" : "-translate-x-full"
         }`}
       >

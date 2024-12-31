@@ -159,7 +159,7 @@ function App() {
         </div>
       </div>
 
-      <div className="text-center py-4">
+      <div className="text-center pb-4 md:py-4 lg:py-0 lg:pb-8">
         {sortStates.sortType && (
           <button
             onClick={handleSorting}
