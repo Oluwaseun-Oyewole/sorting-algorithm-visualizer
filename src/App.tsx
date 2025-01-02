@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import muteIcon from "./assets/mute.jpg";
 import Audio from "./assets/tick.mp3";
 import AlgoTheme from "./components/algoTheme";
 import BubbleSortChallenge from "./components/code";
@@ -27,17 +28,22 @@ function App() {
     isSorting?: boolean;
     isArraySorted?: boolean;
   }>({ speed: speedOptions[0]?.value });
-  const [activeIndex, setActiveIndex] = useState(0);
   const [activeIndices, setActiveIndices] = useState<[number, number] | null>(
     null
   );
+  const [selectState, setSelectState] = useState<number | null>();
+  const [sortMessage, setSortMessage] = useState("");
   const [showCodeEditor, setShowEditor] = useState(false);
+  const [sortedArray, setSortedArray] = useState<number[]>([]);
+  const removedDuplicateSortedArray = [...new Set<number>(sortedArray)];
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const generateArray = () => {
     setSortStates((prev) => {
       return { ...prev, isArraySorted: false };
     });
+    setSortMessage("");
     setArray(generateRandomArray(range));
+    setSortedArray([]);
   };
   const onChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
     setRange(+e.target.value);
@@ -48,6 +54,7 @@ function App() {
     setSortStates((prev) => {
       return { ...prev, speed: +e.target.value };
     });
+    setSelectState(+e.target.value);
   };
 
   const handleSortStates = (sortType: SortAlgoType) => {
@@ -67,74 +74,144 @@ function App() {
     }
   };
 
-  async function BubbleSort<T extends number>(arr: T[], speed: T) {
-    playSound();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
-    audioRef.current.loop = true;
-    try {
-      for (let index = 0; index < arr.length; index++) {
-        for (let j = 0; j < arr.length - 1 - index; j++) {
-          setActiveIndex(index);
-          setActiveIndices([j, j + 1]);
-          if (arr[j] > arr[j + 1]) {
-            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
-            setArray([...arr]);
-            // Delay for specified period
-            await new Promise((resolve) => setTimeout(resolve, speed));
+  async function bubbleSort<T extends number>(arr: T[], speed: T) {
+    if (sortStates.isArraySorted) {
+      setSortMessage("Array already sorted!!");
+    } else {
+      setSortStates((prev) => {
+        return { ...prev, isArraySorted: false, isSorting: true };
+      });
+      playSound();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      audioRef.current.loop = true;
+      try {
+        for (let index = 0; index < arr.length; index++) {
+          for (let j = 0; j < arr.length - 1 - index; j++) {
+            setActiveIndices([j, j + 1]);
+            if (index > 0)
+              setSortedArray((prev) => [...prev, arr.length - index]);
+            if (arr[j] > arr[j + 1]) {
+              [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+              setArray([...arr]);
+              // Delay for specified period
+              await new Promise((resolve) => setTimeout(resolve, speed));
+            }
           }
         }
+      } catch (error) {
+        return error;
+      } finally {
+        setSortStates((prev) => {
+          return { ...prev, isArraySorted: true, isSorting: false };
+        });
+        stopSound();
       }
-    } catch (error) {
-      return error;
-    } finally {
-      setSortStates((prev) => {
-        return { ...prev, isArraySorted: true, isSorting: false };
-      });
-      stopSound();
     }
   }
+  async function quickSortAlgo<T extends number>(arr: T[], speed: T) {
+    if (sortStates.isArraySorted) {
+      setSortMessage("Array already sorted!!");
+    } else {
+      setSortStates((prev) => {
+        return { ...prev, isSorting: true };
+      });
+      playSound();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      audioRef.current.loop = true;
+
+      try {
+        const partition = async (arrays: T[], low: number, high: number) => {
+          const pivot = arrays[high];
+          let i = low - 1;
+          for (let j = low; j < high; j++) {
+            setSortedArray((prev) => [...prev, pivot]);
+            if (arrays[j] <= pivot) {
+              i++;
+              setActiveIndices([i, j]);
+              [arrays[i], arrays[j]] = [arrays[j], arrays[i]];
+              setArray([...arrays]);
+              await new Promise((resolve) => setTimeout(resolve, speed));
+            }
+          }
+          [arrays[i + 1], arrays[high]] = [arrays[high], arrays[i + 1]];
+          setArray([...arrays]);
+          await new Promise((resolve) => setTimeout(resolve, speed));
+          return i + 1;
+        };
+
+        const sort = async (arrays: T[], low: number, high: number) => {
+          if (low < high) {
+            const pi = await partition(arrays, low, high);
+            await sort(arrays, low, pi - 1);
+            await sort(arrays, pi + 1, high);
+          }
+        };
+        await sort(arr, 0, arr.length - 1);
+        return arr;
+      } catch (error) {
+        return error;
+      } finally {
+        setSortStates((prev) => {
+          return { ...prev, isArraySorted: true, isSorting: false };
+        });
+        stopSound();
+      }
+    }
+  }
+
+  console.log("indicess...", activeIndices);
+  console.log(
+    "sorted arrayyyyy removed duplicate",
+    removedDuplicateSortedArray
+  );
 
   function handleSort(sort: SortAlgoType) {
     const arr = [...array];
     switch (sort) {
       case "Bubble":
-        return BubbleSort(arr, sortStates.speed!);
-
+        return bubbleSort(arr, sortStates.speed!);
+      case "Quick":
+        return quickSortAlgo(arr, sortStates.speed!);
       default:
         break;
     }
   }
 
-  function handleSorting() {
-    setSortStates((prev) => {
-      return { ...prev, isSorting: true };
-    });
-  }
-
   useEffect(() => {
-    handleSort(sortStates.sortType as SortAlgoType);
-    if (sortStates.isSorting) {
-      playSound();
-    }
-  }, [sortStates.isSorting]);
+    const timer = setTimeout(() => {
+      setSortMessage("");
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [sortMessage]);
 
   const displayArrayGraph = () => (
-    <ul className="z-[60] w-[90%] text-center overflow-hidden flex items-start justify-center relative z-[150]">
+    <ul className="w-[90%] text-center overflow-hidden flex justify-center relative z-[200]">
       {array?.map((arr, index) => {
         return (
           <li
             key={index}
             className={`flex items-center justify-center text-white font-medium rounded-sm shadow-xl hover:scale-105 transition-all duration-500 ease-in-out ${styleArrayElement(
               array
-            )} ${sortStates.isArraySorted ? "bg-green-800" : "bg-gray-500"} ${
-              activeIndex === index && sortStates.isSorting && "bg-blue-800"
-            }`}
+            )} ${
+              sortStates.isArraySorted
+                ? "bg-green-800"
+                : `${
+                    context?.algoTheme === "dark"
+                      ? "bg-gray-500"
+                      : "bg-gray-600"
+                  } `
+            } 
+             `}
             style={{
               height: `${arr + 50}px`,
               backgroundColor:
-                activeIndices?.includes(index) && sortStates.isSorting
+                activeIndices?.includes(index) && sortStates?.isSorting
                   ? "#991b1b"
+                  : removedDuplicateSortedArray?.includes(index) &&
+                    sortStates.isSorting
+                  ? "green"
                   : "",
             }}
           >
@@ -181,10 +258,9 @@ function App() {
         <button onClick={generateArray}>Generate array</button>
         <div className="flex items-center justify-center gap-5 py-4 lg:py-0">
           {options.map((option) => (
-            <div>
+            <div key={option.value}>
               <button
                 disabled={option?.disabled}
-                key={option.value}
                 value={option.value}
                 className={`${
                   option.value === sortStates?.sortType && "text-green-600"
@@ -195,7 +271,6 @@ function App() {
               </button>
               <button
                 disabled={option?.disabled}
-                key={option.value}
                 value={option.value}
                 className={`${
                   option.value === sortStates?.sortType && "text-green-600"
@@ -216,13 +291,15 @@ function App() {
       <div className="text-center py-5">
         {sortStates.sortType && (
           <button
-            onClick={handleSorting}
+            onClick={() => handleSort(sortStates.sortType as SortAlgoType)}
             className={`bg-green-700 text-white px-5 py-2 rounded-md text-sm hover:opacity-80 transition ease-in-out duration-500`}
           >
             Sort
           </button>
         )}
       </div>
+
+      <p className="text-center pb-3">{sortMessage}</p>
 
       <div className="flex items-center justify-center md:h-[65vh] overflow-y-scroll">
         {displayArrayGraph()}
@@ -232,7 +309,7 @@ function App() {
         <input
           type="range"
           name="range"
-          min="5"
+          min="6"
           max="100"
           value={range}
           onChange={onChangeHandler}
@@ -240,7 +317,7 @@ function App() {
 
         <select
           id="select"
-          value={sortStates.sortType}
+          value={selectState!}
           onChange={handleSpeedChange}
           className={`border-2 border-gray-600 rounded py-2 w-[130px] ${
             context?.algoTheme === "dark" ? "bg-gray-900" : "bg-gray-300"
@@ -252,8 +329,11 @@ function App() {
             </option>
           ))}
         </select>
-        <button onClick={stopSound} className="hidden md:block z-[150]">
-          Stop sound
+        <button
+          onClick={stopSound}
+          className="hidden md:block z-[150] w-8 rounded-full"
+        >
+          <img src={muteIcon} alt="mute icon" className="rounded-full" />
         </button>
       </div>
 

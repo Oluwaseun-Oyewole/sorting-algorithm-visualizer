@@ -9,9 +9,8 @@ const BubbleSortChallenge = ({
   showCodeEditor: boolean;
   setShowEditor: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const [userCode, setUserCode] = useState<string>(`function Sort(arr) {
-   // Practice sorting algorithms
-   return arr
+  const [userCode, setUserCode] = useState<string>(`function sort_algo(arr) {
+   // Practice sort algorithms
 }`);
   const [results, setResults] = useState<string[]>([]);
   const [running, setRunning] = useState(false);
@@ -44,7 +43,7 @@ const BubbleSortChallenge = ({
     const outputs: string[] = [];
     try {
       // eslint-disable-next-line no-new-func
-      const userFunction = new Function(`${userCode}; return Sort;`)();
+      const userFunction = new Function(`${userCode}; return sort_algo;`)();
       for (const testCase of testCases) {
         const userOutput = userFunction([...testCase.input]);
         const expectedOutput = bubbleSort([...testCase.input]);
