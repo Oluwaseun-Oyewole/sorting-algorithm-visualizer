@@ -36,6 +36,11 @@ function App() {
   const [showCodeEditor, setShowEditor] = useState(false);
   const [sortedArray, setSortedArray] = useState<number[]>([]);
   const removedDuplicateSortedArray = [...new Set<number>(sortedArray)];
+  const [midIndex, setMidIndex] = useState<number | null>();
+  const [arrayGroupings, setArraysGroupings] = useState<{
+    left?: number[];
+    right?: number[];
+  } | null>({});
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const generateArray = () => {
     setSortStates((prev) => {
@@ -71,6 +76,7 @@ function App() {
   const playSound = () => {
     if (audioRef?.current) {
       audioRef.current.play();
+      audioRef.current.loop = true;
     }
   };
 
@@ -82,9 +88,6 @@ function App() {
         return { ...prev, isArraySorted: false, isSorting: true };
       });
       playSound();
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore
-      audioRef.current.loop = true;
       try {
         for (let index = 0; index < arr.length; index++) {
           for (let j = 0; j < arr.length - 1 - index; j++) {
@@ -117,10 +120,6 @@ function App() {
         return { ...prev, isSorting: true };
       });
       playSound();
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore
-      audioRef.current.loop = true;
-
       try {
         const partition = async (arrays: T[], low: number, high: number) => {
           const pivot = arrays[high];
@@ -161,11 +160,69 @@ function App() {
     }
   }
 
-  console.log("indicess...", activeIndices);
-  console.log(
-    "sorted arrayyyyy removed duplicate",
-    removedDuplicateSortedArray
-  );
+  async function mergeSortAlgo<T extends number>(arr: T[], speed: T) {
+    if (sortStates.isArraySorted) {
+      setSortMessage("Array already sorted!!");
+    } else {
+      setSortStates((prev) => {
+        return { ...prev, isSorting: true };
+      });
+      playSound();
+      try {
+        const merge = async (leftArr: T[], rightArray: T[]) => {
+          const sortedArray = [];
+          while (leftArr.length && rightArray.length) {
+            if (leftArr[0] <= rightArray[0]) {
+              sortedArray.push(leftArr.shift());
+              await new Promise((resolve) => setTimeout(resolve, speed));
+            } else {
+              sortedArray.push(rightArray.shift());
+              await new Promise((resolve) => setTimeout(resolve, speed));
+            }
+          }
+          await new Promise((resolve) => setTimeout(resolve, speed));
+          return [...sortedArray, ...leftArr, ...rightArray];
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mergeSort = async (arr: T[]): Promise<any> => {
+          if (arr.length < 2) return arr;
+          const mid = Math.floor(arr.length / 2);
+          const leftArr = arr.slice(0, mid);
+          const rightArr = arr.slice(mid);
+          const sortedLeft = await mergeSort(leftArr);
+          const sortedRight = await mergeSort(rightArr);
+
+          const leftGrouping: number[] = [];
+          const rightGrouping: number[] = [];
+          setMidIndex(mid);
+          leftArr?.map((_, index) => {
+            leftGrouping.push(index);
+            return setArraysGroupings((prev) => {
+              return { ...prev, left: leftGrouping };
+            });
+          });
+
+          rightArr?.map((_, index) => {
+            rightGrouping.push(index);
+            return setArraysGroupings((prev) => {
+              return { ...prev, right: rightGrouping };
+            });
+          });
+          return await merge(sortedLeft, sortedRight);
+        };
+        const testing = await mergeSort(arr);
+        setArray([...testing]);
+        console.log("testing -- ", testing);
+      } catch (error) {
+        return error;
+      } finally {
+        setSortStates((prev) => {
+          return { ...prev, isArraySorted: true, isSorting: false };
+        });
+        stopSound();
+      }
+    }
+  }
 
   function handleSort(sort: SortAlgoType) {
     const arr = [...array];
@@ -174,6 +231,8 @@ function App() {
         return bubbleSort(arr, sortStates.speed!);
       case "Quick":
         return quickSortAlgo(arr, sortStates.speed!);
+      case "Merge":
+        return mergeSortAlgo(arr, sortStates.speed!);
       default:
         break;
     }
@@ -186,8 +245,10 @@ function App() {
     return () => clearTimeout(timer);
   }, [sortMessage]);
 
+  console.log("array groupings,", arrayGroupings);
+  console.log("array length -- ", array.length);
   const displayArrayGraph = () => (
-    <ul className="w-[90%] text-center overflow-hidden flex justify-center relative z-[200]">
+    <ul className="w-[90%] text-center overflow-hidden flex justify-center relative z-[200] max-w-[60%]">
       {array?.map((arr, index) => {
         return (
           <li
@@ -203,7 +264,15 @@ function App() {
                       : "bg-gray-600"
                   } `
             } 
-             `}
+              ${midIndex === index && sortStates.isSorting && "bg-blue-700"} ${
+              arrayGroupings?.left?.includes(index) &&
+              sortStates?.isSorting &&
+              "bg-yellow-600"
+            }  ${
+              arrayGroupings?.right?.includes(index) &&
+              sortStates?.isSorting &&
+              "bg-purple-600"
+            }`}
             style={{
               height: `${arr + 50}px`,
               backgroundColor:
@@ -264,7 +333,7 @@ function App() {
                 value={option.value}
                 className={`${
                   option.value === sortStates?.sortType && "text-green-600"
-                } disabled:cursor-not-allowed hidden md:block`}
+                } disabled:cursor-not-allowed hidden md:block disabled:opacity-50`}
                 onClick={() => handleSortStates(option.value as SortAlgoType)}
               >
                 {option.label}
@@ -299,9 +368,11 @@ function App() {
         )}
       </div>
 
-      <p className="text-center pb-3">{sortMessage}</p>
+      <div>
+        {sortMessage && <p className="text-center pb-3">{sortMessage}</p>}
+      </div>
 
-      <div className="flex items-center justify-center md:h-[65vh] overflow-y-scroll">
+      <div className="flex items-center justify-center md:min-h-[65vh] overflow-y-scroll">
         {displayArrayGraph()}
       </div>
 
@@ -310,7 +381,7 @@ function App() {
           type="range"
           name="range"
           min="6"
-          max="100"
+          max="300"
           value={range}
           onChange={onChangeHandler}
         />

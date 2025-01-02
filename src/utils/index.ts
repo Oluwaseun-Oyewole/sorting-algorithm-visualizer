@@ -1,6 +1,6 @@
 export const generateRandomArray = (size?: number) => {
   return Array.from(
-    { length: size ?? 18 },
+    { length: size ?? 45 },
     () => Math.floor(Math.random() * (500 - 40 + 1)) + 40
   );
 };
@@ -11,11 +11,11 @@ interface Option {
   disabled?: boolean;
 }
 export const options: Option[] = [
-  { value: "Merge", label: "Merge Sort", disabled: true },
+  { value: "Merge", label: "Merge Sort" },
   { value: "Quick", label: "Quick Sort" },
   { value: "Heap", label: "Heap Sort", disabled: true },
   { value: "Bubble", label: "Bubble Sort" },
-  { value: "Insertion", label: "Insertion Sort", disabled: true },
+  // { value: "Insertion", label: "Insertion Sort", disabled: true },
 ];
 
 export const speedOptions = [
@@ -31,7 +31,7 @@ export const speedOptions = [
 ];
 
 export function styleArrayElement<T>(array: T[]) {
-  if (array.length < 10) return "w-20 ml-2";
+  if (array.length < 10) return "w-14 ml-2";
   else if (array.length >= 10 && array.length < 20) return "w-8 text-xs ml-2";
   else if (array.length >= 20 && array.length < 40)
     return "w-5 text-[5px] ml-1";

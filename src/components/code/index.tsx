@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { javascript } from "@codemirror/lang-javascript";
 import CodeMirror from "@uiw/react-codemirror";
 import { useEffect, useRef, useState } from "react";
 
-const BubbleSortChallenge = ({
+const SortChallenge = ({
   showCodeEditor,
   setShowEditor,
 }: {
@@ -24,18 +25,26 @@ const BubbleSortChallenge = ({
     { input: [5, 4, 3, 2, 1], expected: [1, 2, 3, 4, 5] },
   ];
 
-  // Your algorithm for comparison
-  const bubbleSort = (arr: number[]): number[] => {
-    const result = [...arr];
-    for (let i = 0; i < result.length; i++) {
-      for (let j = 0; j < result.length - 1 - i; j++) {
-        if (result[j] > result[j + 1]) {
-          [result[j], result[j + 1]] = [result[j + 1], result[j]];
-        }
+  // Your comparison algorithm
+  function merge<T>(leftArr: T[], rightArray: T[]) {
+    const sortedArray = [];
+    while (leftArr.length && rightArray.length) {
+      if (leftArr[0] <= rightArray[0]) {
+        sortedArray.push(leftArr.shift());
+      } else {
+        sortedArray.push(rightArray.shift());
       }
     }
-    return result;
-  };
+    return [...sortedArray, ...leftArr, ...rightArray];
+  }
+
+  function mergeSort<T>(arr: T[]): T[] | any {
+    if (arr.length < 2) return arr;
+    const mid = Math.floor(arr.length / 2);
+    const leftArray = arr.slice(0, mid);
+    const rightArray = arr.slice(mid);
+    return merge(mergeSort(leftArray), mergeSort(rightArray));
+  }
 
   // Run the user's code and compare results
   const runUserCode = async () => {
@@ -46,7 +55,7 @@ const BubbleSortChallenge = ({
       const userFunction = new Function(`${userCode}; return sort_algo;`)();
       for (const testCase of testCases) {
         const userOutput = userFunction([...testCase.input]);
-        const expectedOutput = bubbleSort([...testCase.input]);
+        const expectedOutput = mergeSort([...testCase.input]);
 
         if (JSON.stringify(userOutput) === JSON.stringify(expectedOutput)) {
           outputs.push(`✅ Passed for input: [${testCase.input.join(", ")}]`);
@@ -129,4 +138,4 @@ const BubbleSortChallenge = ({
   );
 };
 
-export default BubbleSortChallenge;
+export default SortChallenge;
