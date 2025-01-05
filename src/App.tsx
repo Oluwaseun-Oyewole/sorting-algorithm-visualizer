@@ -35,7 +35,7 @@ function App() {
   const [sortMessage, setSortMessage] = useState("");
   const [showCodeEditor, setShowEditor] = useState(false);
   const [sortedArray, setSortedArray] = useState<number[]>([]);
-  const removedDuplicateSortedArray = [...new Set<number>(sortedArray)];
+  const removedDuplicateFromSortedArray = [...new Set<number>(sortedArray)];
   const [midIndex, setMidIndex] = useState<number | null>();
   const [arrayGroupings, setArraysGroupings] = useState<{
     left?: number[];
@@ -112,6 +112,8 @@ function App() {
       }
     }
   }
+
+  console.log("remove duplicate", removedDuplicateFromSortedArray);
   async function quickSortAlgo<T extends number>(arr: T[], speed: T) {
     if (sortStates.isArraySorted) {
       setSortMessage("Array already sorted!!");
@@ -192,15 +194,20 @@ function App() {
           const sortedLeft = await mergeSort(leftArr);
           const sortedRight = await mergeSort(rightArr);
 
-          const leftGrouping: number[] = [];
+          console.log("first", sortedArray);
+          // const leftGrouping: number[] = [];
           const rightGrouping: number[] = [];
           setMidIndex(mid);
-          leftArr?.map((_, index) => {
-            leftGrouping.push(index);
-            return setArraysGroupings((prev) => {
-              return { ...prev, left: leftGrouping };
-            });
-          });
+
+          // setArraysGroupings((prev) => {
+          //   return { ...prev, left: leftArr, right: rightArr };
+          // });
+          // leftArr?.map((_, index) => {
+          //   leftGrouping.push(index);
+          //   return setArraysGroupings((prev) => {
+          //     return { ...prev, left: leftArr };
+          //   });
+          // });
 
           rightArr?.map((_, index) => {
             rightGrouping.push(index);
@@ -210,9 +217,8 @@ function App() {
           });
           return await merge(sortedLeft, sortedRight);
         };
-        const testing = await mergeSort(arr);
-        setArray([...testing]);
-        console.log("testing -- ", testing);
+        const sorted_array = await mergeSort(arr);
+        setArray([...sorted_array]);
       } catch (error) {
         return error;
       } finally {
@@ -245,8 +251,6 @@ function App() {
     return () => clearTimeout(timer);
   }, [sortMessage]);
 
-  console.log("array groupings,", arrayGroupings);
-  console.log("array length -- ", array.length);
   const displayArrayGraph = () => (
     <ul className="w-[90%] text-center overflow-hidden flex justify-center relative z-[200] max-w-[60%]">
       {array?.map((arr, index) => {
@@ -256,7 +260,9 @@ function App() {
             className={`flex items-center justify-center text-white font-medium rounded-sm shadow-xl hover:scale-105 transition-all duration-500 ease-in-out ${styleArrayElement(
               array
             )} ${
-              sortStates.isArraySorted
+              sortStates.isArraySorted && context?.algoTheme === "dark"
+                ? "bg-green-500"
+                : sortStates.isArraySorted && context?.algoTheme === "light"
                 ? "bg-green-800"
                 : `${
                     context?.algoTheme === "dark"
@@ -264,27 +270,37 @@ function App() {
                       : "bg-gray-600"
                   } `
             } 
-              ${midIndex === index && sortStates.isSorting && "bg-blue-700"} ${
-              arrayGroupings?.left?.includes(index) &&
-              sortStates?.isSorting &&
-              "bg-yellow-600"
-            }  ${
-              arrayGroupings?.right?.includes(index) &&
-              sortStates?.isSorting &&
-              "bg-purple-600"
-            }`}
+            ${
+              !removedDuplicateFromSortedArray.includes(index) &&
+              sortStates.isSorting &&
+              "bg-yellow-500"
+            }
+             ${
+               removedDuplicateFromSortedArray.includes(index) &&
+               sortStates.isSorting &&
+               "bg-green-500"
+             }
+             ${
+               activeIndices?.includes(index) &&
+               sortStates?.isSorting &&
+               "bg-red-600"
+             }
+             ${
+               arrayGroupings?.right?.includes(index) &&
+               sortStates?.isSorting &&
+               "bg-black"
+             }
+             ${
+               array[midIndex!] === array[index] &&
+               sortStates?.isSorting &&
+               "bg-blue-800"
+             }
+             
+            `}
             style={{
               height: `${arr + 50}px`,
-              backgroundColor:
-                activeIndices?.includes(index) && sortStates?.isSorting
-                  ? "#991b1b"
-                  : removedDuplicateSortedArray?.includes(index) &&
-                    sortStates.isSorting
-                  ? "green"
-                  : "",
             }}
           >
-            {index}
             {arr}
           </li>
         );
@@ -381,7 +397,7 @@ function App() {
           type="range"
           name="range"
           min="6"
-          max="300"
+          max="100"
           value={range}
           onChange={onChangeHandler}
         />
