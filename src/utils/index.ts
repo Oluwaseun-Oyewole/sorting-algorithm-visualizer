@@ -1,6 +1,6 @@
 export const generateRandomArray = (size?: number) => {
   return Array.from(
-    { length: size ?? 45 },
+    { length: size ?? 50 },
     () => Math.floor(Math.random() * (500 - 40 + 1)) + 40
   );
 };
@@ -19,15 +19,15 @@ export const options: Option[] = [
 ];
 
 export const speedOptions = [
-  { value: 2000, label: "Speed" },
-  { value: 1500, label: "1x" },
-  { value: 1000, label: "2x" },
-  { value: 700, label: "3x" },
-  { value: 500, label: "4x" },
-  { value: 250, label: "5x" },
-  { value: 100, label: "6x" },
-  { value: 50, label: "7x" },
-  { value: 10, label: "8x" },
+  { value: 500, label: "Speed" },
+  { value: 1200, label: "1x" },
+  { value: 800, label: "2x" },
+  { value: 400, label: "3x" },
+  { value: 250, label: "4x" },
+  { value: 150, label: "5x" },
+  { value: 80, label: "6x" },
+  { value: 30, label: "7x" },
+  { value: 2, label: "8x" },
 ];
 
 export function styleArrayElement<T>(array: T[]) {

@@ -27,20 +27,22 @@ function App() {
     speed?: number;
     isSorting?: boolean;
     isArraySorted?: boolean;
-  }>({ speed: speedOptions[0]?.value });
-  const [activeIndices, setActiveIndices] = useState<[number, number] | null>(
-    null
-  );
+  }>({ speed: speedOptions[0]?.value, isArraySorted: false });
+  const [activeIndex, setActiveIndex] = useState<{
+    first: number;
+    second: number;
+    pivot?: number;
+  } | null>(null);
   const [selectState, setSelectState] = useState<number | null>();
   const [sortMessage, setSortMessage] = useState("");
   const [showCodeEditor, setShowEditor] = useState(false);
   const [sortedArray, setSortedArray] = useState<number[]>([]);
   const removedDuplicateFromSortedArray = [...new Set<number>(sortedArray)];
-  const [midIndex, setMidIndex] = useState<number | null>();
   const [arrayGroupings, setArraysGroupings] = useState<{
     left?: number[];
     right?: number[];
-  } | null>({});
+  } | null>(null);
+  const [sortedMerge, setSortedMerge] = useState<[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const generateArray = () => {
     setSortStates((prev) => {
@@ -57,16 +59,11 @@ function App() {
 
   const handleSpeedChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSortStates((prev) => {
-      return { ...prev, speed: +e.target.value };
+      return { ...prev, speed: +e.target.value, isArraySorted: false };
     });
     setSelectState(+e.target.value);
   };
 
-  const handleSortStates = (sortType: SortAlgoType) => {
-    setSortStates((prev) => {
-      return { ...prev, sortType };
-    });
-  };
   const stopSound = () => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -75,158 +72,139 @@ function App() {
   };
   const playSound = () => {
     if (audioRef?.current) {
-      audioRef.current.play();
-      audioRef.current.loop = true;
+      // audioRef.current.play();
+      // audioRef.current.loop = true;
     }
   };
 
   async function bubbleSort<T extends number>(arr: T[], speed: T) {
-    if (sortStates.isArraySorted) {
-      setSortMessage("Array already sorted!!");
-    } else {
+    setSortedArray([]);
+    setArray([...arr]);
+    playSound();
+    try {
       setSortStates((prev) => {
         return { ...prev, isArraySorted: false, isSorting: true };
       });
-      playSound();
-      try {
-        for (let index = 0; index < arr.length; index++) {
-          for (let j = 0; j < arr.length - 1 - index; j++) {
-            setActiveIndices([j, j + 1]);
-            if (index > 0)
-              setSortedArray((prev) => [...prev, arr.length - index]);
-            if (arr[j] > arr[j + 1]) {
-              [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
-              setArray([...arr]);
-              // Delay for specified period
-              await new Promise((resolve) => setTimeout(resolve, speed));
-            }
+      for (let index = 0; index < arr.length; index++) {
+        for (let j = 0; j < arr.length - 1 - index; j++) {
+          if (sortStates.isArraySorted) {
+            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+            setArray([...arr]);
+          }
+          if (index > 0)
+            setSortedArray((prev) => [...prev, arr.length - index]);
+          if (arr[j] > arr[j + 1]) {
+            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+            setActiveIndex((prev) => {
+              return { ...prev, first: arr[j], second: arr[j + 1] };
+            });
+            await new Promise((resolve) => setTimeout(resolve, speed));
+            setArray([...arr]);
           }
         }
-      } catch (error) {
-        return error;
-      } finally {
-        setSortStates((prev) => {
-          return { ...prev, isArraySorted: true, isSorting: false };
-        });
-        stopSound();
       }
+    } catch (error) {
+      return error;
+    } finally {
+      setSortStates((prev) => {
+        return { ...prev, isArraySorted: true, isSorting: false };
+      });
+      stopSound();
     }
   }
 
-  console.log("remove duplicate", removedDuplicateFromSortedArray);
   async function quickSortAlgo<T extends number>(arr: T[], speed: T) {
-    if (sortStates.isArraySorted) {
-      setSortMessage("Array already sorted!!");
-    } else {
-      setSortStates((prev) => {
-        return { ...prev, isSorting: true };
-      });
-      playSound();
-      try {
-        const partition = async (arrays: T[], low: number, high: number) => {
-          const pivot = arrays[high];
-          let i = low - 1;
-          for (let j = low; j < high; j++) {
-            setSortedArray((prev) => [...prev, pivot]);
-            if (arrays[j] <= pivot) {
-              i++;
-              setActiveIndices([i, j]);
-              [arrays[i], arrays[j]] = [arrays[j], arrays[i]];
-              setArray([...arrays]);
-              await new Promise((resolve) => setTimeout(resolve, speed));
-            }
-          }
-          [arrays[i + 1], arrays[high]] = [arrays[high], arrays[i + 1]];
-          setArray([...arrays]);
-          await new Promise((resolve) => setTimeout(resolve, speed));
-          return i + 1;
-        };
+    setArray([...arr]);
+    setSortStates((prev) => {
+      return { ...prev, isSorting: true };
+    });
+    playSound();
+    try {
+      const partition = async (arrays: T[], low: number, high: number) => {
+        const pivot = arrays[high];
+        let i = low - 1;
 
-        const sort = async (arrays: T[], low: number, high: number) => {
-          if (low < high) {
-            const pi = await partition(arrays, low, high);
-            await sort(arrays, low, pi - 1);
-            await sort(arrays, pi + 1, high);
+        for (let j = low; j < high; j++) {
+          if (arrays[j] <= pivot) {
+            i++;
+            setSortedArray((prev) => [...prev, arr[i]]);
+            [arrays[i], arrays[j]] = [arrays[j], arrays[i]];
+            setArray([...arrays]);
+            setActiveIndex({ first: arr[i], second: arr[j], pivot });
+            await new Promise((resolve) => setTimeout(resolve, speed));
           }
-        };
-        await sort(arr, 0, arr.length - 1);
-        return arr;
-      } catch (error) {
-        return error;
-      } finally {
-        setSortStates((prev) => {
-          return { ...prev, isArraySorted: true, isSorting: false };
-        });
-        stopSound();
-      }
+        }
+        [arrays[i + 1], arrays[high]] = [arrays[high], arrays[i + 1]];
+        setArray([...arrays]);
+        await new Promise((resolve) => setTimeout(resolve, speed));
+        return i + 1;
+      };
+      const sort = async (arrays: T[], low: number, high: number) => {
+        if (low < high) {
+          const pi = await partition(arrays, low, high);
+          await sort(arrays, low, pi - 1);
+          await sort(arrays, pi + 1, high);
+        }
+      };
+      await sort(arr, 0, arr.length - 1);
+
+      return arr;
+    } catch (error) {
+      return error;
+    } finally {
+      setSortStates((prev) => {
+        return { ...prev, isArraySorted: true, isSorting: false };
+      });
+      stopSound();
     }
   }
 
   async function mergeSortAlgo<T extends number>(arr: T[], speed: T) {
-    if (sortStates.isArraySorted) {
-      setSortMessage("Array already sorted!!");
-    } else {
-      setSortStates((prev) => {
-        return { ...prev, isSorting: true };
-      });
-      playSound();
-      try {
-        const merge = async (leftArr: T[], rightArray: T[]) => {
-          const sortedArray = [];
-          while (leftArr.length && rightArray.length) {
-            if (leftArr[0] <= rightArray[0]) {
-              sortedArray.push(leftArr.shift());
-              await new Promise((resolve) => setTimeout(resolve, speed));
-            } else {
-              sortedArray.push(rightArray.shift());
-              await new Promise((resolve) => setTimeout(resolve, speed));
-            }
+    setSortStates((prev) => {
+      return { ...prev, isSorting: true };
+    });
+    playSound();
+    try {
+      const merge = async (leftArr: T[], rightArray: T[]) => {
+        const sortedArray = [];
+        while (leftArr.length && rightArray.length) {
+          if (leftArr[0] <= rightArray[0]) {
+            sortedArray.push(leftArr.shift()!);
+            setSortedMerge([...sortedArray] as []);
+            await new Promise((resolve) => setTimeout(resolve, speed));
+          } else {
+            sortedArray.push(rightArray.shift());
+            setSortedMerge([...sortedArray] as []);
+            await new Promise((resolve) => setTimeout(resolve, speed));
           }
-          await new Promise((resolve) => setTimeout(resolve, speed));
-          return [...sortedArray, ...leftArr, ...rightArray];
-        };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const mergeSort = async (arr: T[]): Promise<any> => {
-          if (arr.length < 2) return arr;
-          const mid = Math.floor(arr.length / 2);
-          const leftArr = arr.slice(0, mid);
-          const rightArr = arr.slice(mid);
-          const sortedLeft = await mergeSort(leftArr);
-          const sortedRight = await mergeSort(rightArr);
+        }
+        await new Promise((resolve) => setTimeout(resolve, speed));
+        return [...sortedArray, ...leftArr, ...rightArray];
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mergeSort = async (arr: T[]): Promise<any> => {
+        if (arr.length < 2) return arr;
+        const mid = Math.floor(arr.length / 2);
+        const leftArr = arr.slice(0, mid);
+        const rightArr = arr.slice(mid);
 
-          console.log("first", sortedArray);
-          // const leftGrouping: number[] = [];
-          const rightGrouping: number[] = [];
-          setMidIndex(mid);
-
-          // setArraysGroupings((prev) => {
-          //   return { ...prev, left: leftArr, right: rightArr };
-          // });
-          // leftArr?.map((_, index) => {
-          //   leftGrouping.push(index);
-          //   return setArraysGroupings((prev) => {
-          //     return { ...prev, left: leftArr };
-          //   });
-          // });
-
-          rightArr?.map((_, index) => {
-            rightGrouping.push(index);
-            return setArraysGroupings((prev) => {
-              return { ...prev, right: rightGrouping };
-            });
-          });
-          return await merge(sortedLeft, sortedRight);
-        };
-        const sorted_array = await mergeSort(arr);
-        setArray([...sorted_array]);
-      } catch (error) {
-        return error;
-      } finally {
-        setSortStates((prev) => {
-          return { ...prev, isArraySorted: true, isSorting: false };
+        const sortedLeft = await mergeSort(leftArr);
+        const sortedRight = await mergeSort(rightArr);
+        setArraysGroupings((prev) => {
+          return { ...prev, left: leftArr, right: rightArr };
         });
-        stopSound();
-      }
+        await new Promise((resolve) => setTimeout(resolve, speed));
+        return await merge(sortedLeft, sortedRight);
+      };
+      const sorted_array = await mergeSort(arr);
+      setArray([...sorted_array]);
+    } catch (error) {
+      return error;
+    } finally {
+      setSortStates((prev) => {
+        return { ...prev, isArraySorted: true, isSorting: false };
+      });
+      stopSound();
     }
   }
 
@@ -261,7 +239,7 @@ function App() {
               array
             )} ${
               sortStates.isArraySorted && context?.algoTheme === "dark"
-                ? "bg-green-500"
+                ? "bg-gray-500"
                 : sortStates.isArraySorted && context?.algoTheme === "light"
                 ? "bg-green-800"
                 : `${
@@ -270,32 +248,42 @@ function App() {
                       : "bg-gray-600"
                   } `
             } 
-            ${
-              !removedDuplicateFromSortedArray.includes(index) &&
-              sortStates.isSorting &&
-              "bg-yellow-500"
-            }
              ${
                removedDuplicateFromSortedArray.includes(index) &&
                sortStates.isSorting &&
-               "bg-green-500"
+               "bg-pink-500"
              }
              ${
-               activeIndices?.includes(index) &&
+               arrayGroupings?.left![index] &&
                sortStates?.isSorting &&
-               "bg-red-600"
+               "bg-purple-700"
              }
-             ${
-               arrayGroupings?.right?.includes(index) &&
-               sortStates?.isSorting &&
-               "bg-black"
-             }
-             ${
-               array[midIndex!] === array[index] &&
-               sortStates?.isSorting &&
-               "bg-blue-800"
-             }
-             
+               ${
+                 arrayGroupings?.right![index] &&
+                 sortStates?.isSorting &&
+                 "bg-purple-700"
+               }
+            ${sortedMerge[index] && sortStates?.isSorting && "bg-pink-800"}
+            ${
+              activeIndex?.first === array[index] &&
+              sortStates.isSorting &&
+              "bg-blue-500"
+            }
+              ${
+                activeIndex?.second === array[index] &&
+                sortStates.isSorting &&
+                "bg-blue-500"
+              }
+              ${
+                activeIndex?.pivot === arr &&
+                sortStates.isSorting &&
+                "bg-yellow-700"
+              }
+              ${
+                sortedArray[index] === arr &&
+                sortStates.isSorting &&
+                "bg-blue-700"
+              }
             `}
             style={{
               height: `${arr + 50}px`,
@@ -336,7 +324,7 @@ function App() {
       )}
 
       <div
-        className={`lg:h-[12vh] sticky top-0 left-0 z-[100] flex flex-col lg:flex-row items-center justify-around md:justify-between px-10 py-5 ${
+        className={`lg:h-[14vh] sticky top-0 left-0 z-[100] flex flex-col lg:flex-row items-center justify-around md:justify-between px-10 py-5 ${
           context?.algoTheme === "dark" ? "bg-gray-900" : "bg-gray-300"
         }`}
       >
@@ -350,7 +338,7 @@ function App() {
                 className={`${
                   option.value === sortStates?.sortType && "text-green-600"
                 } disabled:cursor-not-allowed hidden md:block disabled:opacity-50`}
-                onClick={() => handleSortStates(option.value as SortAlgoType)}
+                onClick={() => handleSort(option.value as SortAlgoType)}
               >
                 {option.label}
               </button>
@@ -360,9 +348,9 @@ function App() {
                 className={`${
                   option.value === sortStates?.sortType && "text-green-600"
                 } disabled:cursor-not-allowed block md:hidden`}
-                onClick={() => handleSortStates(option.value as SortAlgoType)}
+                onClick={() => handleSort(option.value as SortAlgoType)}
               >
-                {option.label?.split(" ")[0]}
+                {option.label?.split(" ")[0]}ss
               </button>
             </div>
           ))}
@@ -373,26 +361,11 @@ function App() {
         </div>
       </div>
 
-      <div className="text-center py-5">
-        {sortStates.sortType && (
-          <button
-            onClick={() => handleSort(sortStates.sortType as SortAlgoType)}
-            className={`bg-green-700 text-white px-5 py-2 rounded-md text-sm hover:opacity-80 transition ease-in-out duration-500`}
-          >
-            Sort
-          </button>
-        )}
-      </div>
-
-      <div>
-        {sortMessage && <p className="text-center pb-3">{sortMessage}</p>}
-      </div>
-
-      <div className="flex items-center justify-center md:min-h-[65vh] overflow-y-scroll">
+      <div className="flex items-center justify-center pt-6">
         {displayArrayGraph()}
       </div>
 
-      <div className="py-5 md:py-6 lg:py-0 gap-8 lg:absolute bottom-4 w-full text-center flex items-center justify-center">
+      <div className="py-5 md:py-6 lg:py-0 gap-8 lg:absolute bottom-8 w-full text-center flex items-center justify-center">
         <input
           type="range"
           name="range"
